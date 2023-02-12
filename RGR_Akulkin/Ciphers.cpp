@@ -6,11 +6,11 @@ int ReadInt() {
     cin.clear();
     getline(cin, val);
 
-    if (val == "" || val.length() > 9) throw "\nERROR: You entering text, not a number.";
+    if (val == "" || val.length() > 9) throw "\nERROR: Incorrect input. You entered a text, not a number. (Text is automatically detected from 10 characters)";
     for (int i = 0; i < val.length(); i++) {
         if (i == 0 && val[i] == '-') continue;
         if (val[i] < '0' || val[i] > '9') {
-            throw "\nERROR: You entering text, not a number.";
+            throw "\nERROR: Incorrect input. You entered a text, not a number. (Text is automatically detected from 10 characters)";
             return 0;
         }
     }
@@ -21,7 +21,7 @@ void FileInput(string const& file_directory, string const& input_text) {
     ofstream outf{ file_directory };
     if (!outf)
     {
-        cout << "output.txt could not be opened for writing!" << endl;
+        throw "\nERROR: FILE.txt could not be opened for writing!";
         return;
     }
     outf << input_text;
@@ -32,7 +32,7 @@ string FileOutput(string const& file_directory) {
     ifstream inf{ file_directory };
     if (!inf)
     {
-        cout << "input.txt could not be opened for reading!" << endl;
+        throw "\nERROR: FILE.txt could not be opened for reading!";
         return "";
     }
 
@@ -73,20 +73,31 @@ void AtbashEnDecode(string const& file_directory) {
     FileInput(file_directory, output_text);
 }
 
-int Euler(int const& input) {
-    int n = input, res = input;
-    for (int d = 2; d * d <= n; d++) {
-        if (n % d == 0) {
-            while (n % d == 0) {
-                n /= d;
-            }
-            res -= res / d;
+//int Euler(int const& input) {
+//    int n = input, res = input;
+//    for (int d = 2; d * d <= n; d++) {
+//        if (n % d == 0) {
+//            while (n % d == 0) {
+//                n /= d;
+//            }
+//            res -= res / d;
+//        }
+//    }
+//    if (n > 1) {
+//        res -= res / n;
+//    }
+//    return res;
+//}
+
+bool checkPrime(int num) {
+    for (int i = 2; i < num; i++) {
+        if (num % i == 0)
+        {
+            return false;
+            break;
         }
     }
-    if (n > 1) {
-        res -= res / n;
-    }
-    return res;
+    return true;
 }
 
 int mutuallyPrime(int const& num1, int const& num2) {
@@ -136,32 +147,38 @@ void RSA_Encode(string const& file_directory) {
 
     cout << "Enter the public key (e, n):\n";
 
-    cout << "n (n >= 256 & n < 1.000.000) << ";
-    int n = ReadInt();
-    if (n < 256 || n > 1000000) throw "Incorrect input.";
+    cout << "Enter two prime numbers p and q (n = p * q):\n";
 
-    int f = Euler(n);
+    cout << "p (p >= 128 & p <= 10000) << ";
+    int p = ReadInt();
+    if (p < 128 || p > 10000 || !checkPrime(p)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
+
+    cout << "q (q >= 128 & q <= 10000) << ";
+    int q = ReadInt();
+    if (q < 128 || q > 10000 || !checkPrime(q)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
+
+    int n = p * q;
+    int f = (p - 1) * (q - 1);
 
     random_device rd;
     mt19937 gen(rd());
     uniform_int_distribution<mt19937::result_type> dist(f / 2, f - 1);
 
-    cout << endl;
+    cout << "Possible values of e: ";
 
     int k = 0;
     while (k <= 10) {
         int temp = dist(gen);
         if (mutuallyPrime(temp, f)) {
-            cout << temp << " ";
+            if (k != 10) cout << temp << " , ";
+            else cout << temp << endl;
             k++;
         }
     }
 
-    cout << endl;
-
     cout << "e (e < " << f << ") << ";
     int e = ReadInt();
-    if (e < 0 || e >= f || !mutuallyPrime(e, f)) throw "Incorrect input.";
+    if (e < 0 || e >= f || !mutuallyPrime(e, f)) throw "ERROR: Incorrect input. The number does not match the specified range.";
 
     cout << endl;
 
@@ -183,10 +200,10 @@ void RSA_Decode(string const& file_directory) {
     cout << "Enter the private key (d, n):\n";
     cout << "d << ";
     int d = ReadInt();
-    if (d < 0) throw "Incorrect input.";
+    if (d < 0) throw "ERROR: Incorrect input. The number does not match the specified range.";
     cout << "n (n >= 256) << ";
     int n = ReadInt();
-    if (n < 256) throw "Incorrect input.";
+    if (n < 256) throw "ERROR: Incorrect input. The number does not match the specified range.";
 
     cout << endl;
 
@@ -208,8 +225,7 @@ void RSA_Decode(string const& file_directory) {
             value = 0;
         }
     }
-    cout << endl;
-    
+
     FileInput(file_directory, decrypted_text);
 }
 
@@ -219,8 +235,9 @@ void RailFenceEncode(string const& file_directory) {
     bool direction = false;
 
     int key;
-    cout << "Enter the key: ";
+    cout << "Enter the key (key >= 2): ";
     key = ReadInt();
+    if (key < 2) throw "ERROR: Incorrect input. The number does not match the specified range.";
     cout << endl;
 
     fence.resize(key);

@@ -12,7 +12,7 @@ int CipherSelection() {
 	int cipher_selection;
 	cipher_selection = ReadInt();
 	cout << endl;
-	if (cipher_selection < 1 || cipher_selection > 4) throw "ERROR: Incorrect input.";
+	if (cipher_selection < 1 || cipher_selection > 4) throw "ERROR: Incorrect input. The number does not match the specified range.";
 	return cipher_selection;
 }
 
@@ -34,7 +34,7 @@ bool PassVerif(string const& password) {
 	return true;
 }
 
-enum MENU { ENTER_TEXT = 1, ENCODE, DECODE, OUTPUT_TEXT, EXIT };
+enum MENU { ENTER_TEXT = 1, ENCODE_DECODE, ENCODE, DECODE, OUTPUT_TEXT, EXIT };
 enum CHIPHER { ATBASH = 1, RSA, RAIL_FENCE, MAIN_EXIT };
 
 int main() {
@@ -54,16 +54,17 @@ int main() {
 		try {
 			cout << "Select an action:\n";
 			cout << "1) Entering text into a file;\n";
-			cout << "2) Encode text;\n";
-			cout << "3) Decode text;\n";
-			cout << "4) Text output from a file;\n";
-			cout << "5) Exit.\n";
-			cout << "Enter a number from 1 to 5: ";
+			cout << "2) Encode-Decode text;\n";
+			cout << "3) Encode text;\n";
+			cout << "4) Decode text;\n";
+			cout << "5) Text output from a file;\n";
+			cout << "6) Exit.\n";
+			cout << "Enter a number from 1 to 6: ";
 
 			int action_selection;
 			action_selection = ReadInt();
 			cout << endl;
-			if (action_selection < 1 || action_selection > 5) throw "ERROR: Incorrect input.";
+			if (action_selection < 1 || action_selection > 6) throw "ERROR: Incorrect input. The number does not match the specified range.";
 
 			string file_text;
 			switch (action_selection) {
@@ -72,6 +73,62 @@ int main() {
 				getline(cin, file_text);
 				cout << endl;
 				FileInput(file_directory, file_text);
+				break;
+
+			case ENCODE_DECODE:
+				if (!PassVerif(program_password)) {
+					throw "ERROR: Incorrect password.";
+				}
+				else {
+					switch (CipherSelection()) {
+					case ATBASH:
+						cout << "Input text: ";
+						cin.clear();
+						getline(cin, file_text);
+						cout << endl;
+						FileInput(file_directory, file_text);
+
+						AtbashEnDecode(file_directory);
+
+						cout << "Encrypted text: " << FileOutput(file_directory) << "\n\n";
+
+						AtbashEnDecode(file_directory);
+						break;
+
+					case RSA:
+						cout << "Input text: ";
+						cin.clear();
+						getline(cin, file_text);
+						cout << endl;
+						FileInput(file_directory, file_text);
+
+						RSA_Encode(file_directory);
+
+						cout << "Encrypted text: " << FileOutput(file_directory) << "\n\n";
+
+						RSA_Decode(file_directory);
+						break;
+
+					case RAIL_FENCE:
+						cout << "Input text: ";
+						cin.clear();
+						getline(cin, file_text);
+						cout << endl;
+						FileInput(file_directory, file_text);
+
+						RailFenceEncode(file_directory);
+
+						cout << "Encrypted text: " << FileOutput(file_directory) << "\n\n";
+
+						RailFenceDecode(file_directory);
+						break;
+
+					case MAIN_EXIT:
+						break;
+					}
+
+					cout << "Decrypted text: " << FileOutput(file_directory) << "\n\n";
+				}
 				break;
 
 			case ENCODE:
