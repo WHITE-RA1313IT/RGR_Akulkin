@@ -1,6 +1,7 @@
 #include "Ciphers.h"
 #include <Windows.h>
-//test
+#include <random>
+
 int CipherSelection() {
 	cout << "Choose a cipher:\n";
 	cout << "1) Atbash;\n";
@@ -113,11 +114,63 @@ int main() {
 						break;
 
 					case RSA:
+					{
+						random_device rd;
+						mt19937 gen(rd());
+						uniform_int_distribution<mt19937::result_type> prime_gen(129, 9999);
+
 						input_text = GetInputText(file_directory);
 
-						RSA_E_D(input_text, file_directory);
+						cout << "Enter the public key (e, n):\n";
+
+						cout << "Enter two prime numbers p and q (n = p * q):\n";
+
+						cout << "Possible values of p/q: ";
+
+						int count = 0;
+						while (count <= 10) {
+							int temp = prime_gen(gen);
+							if (checkPrime(temp)) {
+								if (count != 10) cout << temp << " , ";
+								else cout << temp << endl;
+								count++;
+							}
+						}
+
+						cout << "p (p > 128 & p < 10000) << ";
+						int p = ReadInt();
+
+						cout << "q (q > 128 & q < 10000) << ";
+						int q = ReadInt();
+
+						uniform_int_distribution<mt19937::result_type> e_gen((p - 1) * (q - 1) / 2, (p - 1) * (q - 1) - 1);
+
+						cout << "Possible values of e: ";
+
+						count = 0;
+						while (count <= 10) {
+							int temp = e_gen(gen);
+							if (mutuallyPrime(temp, (p - 1) * (q - 1))) {
+								if (count != 10) cout << temp << " , ";
+								else cout << temp << endl;
+								count++;
+							}
+						}
+						cout << "e (e <= " << (p - 1) * (q - 1) << ") << ";
+						int e;
+						e = ReadInt();
 						cout << endl;
-						break;
+
+						int d;
+						cout << "Input: " << input_text << endl;
+						RSA_Encode(input_text, file_directory, e, p, q, d);
+
+						input_text = FileOutput(file_directory);
+
+						RSA_Decode(input_text, file_directory, d, p * q);
+						cout << endl;
+					}
+					break;
 
 					case RAIL_FENCE:
 						input_text = GetInputText(file_directory);
@@ -159,10 +212,59 @@ int main() {
 						break;
 
 					case RSA:
+					{
+						random_device rd;
+						mt19937 gen(rd());
+						uniform_int_distribution<mt19937::result_type> prime_gen(129, 9999);
+
 						input_text = GetInputText(file_directory);
 
-						RSA_Encode(input_text, file_directory);
-						break;
+						cout << "Enter the public key (e, n):\n";
+
+						cout << "Enter two prime numbers p and q (n = p * q):\n";
+
+						cout << "Possible values of p/q: ";
+
+						int count = 0;
+						while (count <= 10) {
+							int temp = prime_gen(gen);
+							if (checkPrime(temp)) {
+								if (count != 10) cout << temp << " , ";
+								else cout << temp << endl;
+								count++;
+							}
+						}
+
+						cout << "p (p > 128 & p < 10000) << ";
+						int p = ReadInt();
+
+						cout << "q (q > 128 & q < 10000) << ";
+						int q = ReadInt();
+
+						uniform_int_distribution<mt19937::result_type> e_gen((p - 1) * (q - 1) / 2, (p - 1) * (q - 1) - 1);
+
+						cout << "Possible values of e: ";
+
+						count = 0;
+						while (count <= 10) {
+							int temp = e_gen(gen);
+							if (mutuallyPrime(temp, (p - 1) * (q - 1))) {
+								if (count != 10) cout << temp << " , ";
+								else cout << temp << endl;
+								count++;
+							}
+						}
+						cout << "e (e <= " << (p - 1) * (q - 1) << ") << ";
+						int e;
+						e = ReadInt();
+						cout << endl;
+
+						int d;
+						cout << "Input: " << input_text << endl;
+						RSA_Encode(input_text, file_directory, e, p, q, d);
+						cout << endl;
+					}
+					break;
 
 					case RAIL_FENCE:
 						input_text = GetInputText(file_directory);
@@ -189,7 +291,6 @@ int main() {
 					throw "ERROR: Incorrect password.";
 				}
 				else {
-					int method_selection;
 					string input_text;
 
 					switch (CipherSelection()) {
@@ -201,11 +302,20 @@ int main() {
 						break;
 
 					case RSA:
+					{
 						input_text = GetInputText(file_directory);
 
-						RSA_Decode(input_text, file_directory);
+						cout << "Enter the private key (d, n):\n";
+						cout << "d << ";
+						int d = ReadInt();
+
+						cout << "n (n >= 256) << ";
+						int n = ReadInt();
+
+						RSA_Decode(input_text, file_directory, d, n);
 						cout << endl;
-						break;
+					}
+					break;
 
 					case RAIL_FENCE:
 						input_text = GetInputText(file_directory);

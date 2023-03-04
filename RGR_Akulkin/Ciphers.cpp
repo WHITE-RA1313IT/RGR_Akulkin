@@ -1,5 +1,4 @@
 #include "Ciphers.h"
-#include <random>
 
 int ReadInt() {
     string val;
@@ -71,7 +70,7 @@ void AtbashEnDecode(string const& input_text, string const& file_directory) {
     cout << "Output: " << output_text << endl;
 }
 
-bool checkPrime(int num) {
+bool checkPrime(int const& num) {
     for (int i = 2; i < num; i++) {
         if (num % i == 0)
         {
@@ -124,141 +123,31 @@ int mod(int a0, int x0, int p0) {
     return q;
 }
 
-void RSA_E_D(string const& input_text, string const& file_directory) {
-    string encrypted_text, decrypted_text;
-
-    cout << "Enter the public key (e, n):\n";
-
-    cout << "Enter two prime numbers p and q (n = p * q):\n";
-
-    cout << "p (p >= 128 & p <= 10000) << ";
-    int p = ReadInt();
-    if (p < 128 || p > 10000 || !checkPrime(p)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
-
-    cout << "q (q >= 128 & q <= 10000) << ";
-    int q = ReadInt();
-    if (q < 128 || q > 10000 || !checkPrime(q)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
+void RSA_Encode(string const& input_text, string const& file_directory, int const& e, int const& p, int const& q, int& d) {
+    string encrypted_text;
 
     int n = p * q;
     int f = (p - 1) * (q - 1);
 
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_int_distribution<mt19937::result_type> dist(f / 2, f - 1);
+    if ((p < 129 || p > 9999 || !checkPrime(p)) || (q < 129 || q > 9999 || !checkPrime(q)) || (e < 0 || e >= f || !mutuallyPrime(e, f))) throw "\nERROR: Oops, something went wrong. Check your numbers.";
 
-    cout << "Possible values of e: ";
-
-    int k = 0;
-    while (k <= 10) {
-        int temp = dist(gen);
-        if (mutuallyPrime(temp, f)) {
-            if (k != 10) cout << temp << " , ";
-            else cout << temp << endl;
-            k++;
-        }
+    for (auto x : input_text) {
+        encrypted_text += to_string(mod(x, e, n)) + ' ';
     }
 
-    cout << "e (e < " << f << ") << ";
-    int e = ReadInt();
-    if (e < 0 || e >= f || !mutuallyPrime(e, f)) throw "ERROR: Incorrect input. The number does not match the specified range.";
-
-    cout << endl;
-
-    int d = mutuallyInverse(e, f);
+    d = mutuallyInverse(e, f);
 
     cout << "Public key (e, n): ( " << e << " , " << n << " )\n";
     cout << "Private key (d, n): ( " << d << " , " << n << " )\n\n";
 
-    for (auto x : input_text) {
-        encrypted_text += to_string(mod(x, e, n)) + ' ';
-    }
-
     FileInput(file_directory, encrypted_text);
-
-    int value = 0;
-    bool negative = false;
-    for (int i = 0; i < encrypted_text.length(); i++) {
-        if (encrypted_text[i] >= '0' && encrypted_text[i] <= '9') {
-            value *= 10;
-            value += encrypted_text[i] - '0';
-            if (i != 0) {
-                if (encrypted_text[i - 1] == '-') negative = true;
-            }
-        }
-        else if (encrypted_text[i] == ' ') {
-            if (negative) value *= -1;
-            negative = false;
-            value = mod(value, d, n);
-            decrypted_text += char(value);
-            value = 0;
-        }
-    }
-
-    FileInput(file_directory, decrypted_text);
-
-    cout << "Input text: " << input_text << endl;
-    cout << "Encrypted text: " << encrypted_text << endl;
-    cout << "Decrypted text: " << decrypted_text << endl;
-}
-
-void RSA_Encode(string const& input_text, string const& file_directory) {
-    string encrypted_text;
-
-    cout << "Enter the public key (e, n):\n";
-
-    cout << "Enter two prime numbers p and q (n = p * q):\n";
-
-    cout << "p (p >= 128 & p <= 10000) << ";
-    int p = ReadInt();
-    if (p < 128 || p > 10000 || !checkPrime(p)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
-
-    cout << "q (q >= 128 & q <= 10000) << ";
-    int q = ReadInt();
-    if (q < 128 || q > 10000 || !checkPrime(q)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
-
-    int n = p * q;
-    int f = (p - 1) * (q - 1);
-
-    random_device rd;
-    mt19937 gen(rd());
-    uniform_int_distribution<mt19937::result_type> dist(f / 2, f - 1);
-
-    cout << "Possible values of e: ";
-
-    int k = 0;
-    while (k <= 10) {
-        int temp = dist(gen);
-        if (mutuallyPrime(temp, f)) {
-            if (k != 10) cout << temp << " , ";
-            else cout << temp << endl;
-            k++;
-        }
-    }
-
-    cout << "e (e < " << f << ") << ";
-    int e = ReadInt();
-    if (e < 0 || e >= f || !mutuallyPrime(e, f)) throw "ERROR: Incorrect input. The number does not match the specified range.";
-
-    for (auto x : input_text) {
-        encrypted_text += to_string(mod(x, e, n)) + ' ';
-    }
-
-    FileInput(file_directory, encrypted_text);
-
-    cout << "Input text: " << input_text << endl;
     cout << "Encrypted text: " << encrypted_text << endl;
 }
 
-void RSA_Decode(string const& input_text, string const& file_directory) {
+void RSA_Decode(string const& input_text, string const& file_directory, int const& d, int const& n) {
     string decrypted_text, encrypted_text = input_text;
 
-    cout << "Enter the private key (d, n):\n";
-    cout << "d << ";
-    int d = ReadInt();
-    if (d < 0) throw "ERROR: Incorrect input. The number does not match the specified range.";
-    cout << "n (n >= 256) << ";
-    int n = ReadInt();
-    if (n < 256) throw "ERROR: Incorrect input. The number does not match the specified range.";
+    if (d < 0 || n < 256) throw "ERROR: Oops, something went wrong. Check your numbers.";
 
     cout << endl;
 
@@ -282,8 +171,6 @@ void RSA_Decode(string const& input_text, string const& file_directory) {
     }
 
     FileInput(file_directory, decrypted_text);
-
-    cout << "Input text: " << encrypted_text << endl;
     cout << "Decrypted text: " << decrypted_text << endl;
 }
 
