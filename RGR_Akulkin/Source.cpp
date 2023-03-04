@@ -34,18 +34,37 @@ bool PassVerif(string const& password) {
 	return true;
 }
 
+string GetInputText(string const& file_directory) {
+	int method_selection;
+	string input_text;
+
+	cout << "Choose a way to get the text:\n";
+	cout << "1) Console;\n";
+	cout << "2) File.\n";
+
+	method_selection = ReadInt();
+	cout << endl;
+	if (method_selection < 1 || method_selection > 2) throw "ERROR: Incorrect input. The number does not match the specified range.";
+
+	if (method_selection == 1) {
+		cout << "Input: ";
+		cin.clear();
+		getline(cin, input_text);
+	}
+	else {
+		input_text = FileOutput(file_directory);
+		cout << "File content: " << input_text << endl;
+	}
+
+	return input_text;
+}
+
 enum MENU { ENTER_TEXT = 1, ENCODE_DECODE, ENCODE, DECODE, OUTPUT_TEXT, EXIT };
 enum CHIPHER { ATBASH = 1, RSA, RAIL_FENCE, MAIN_EXIT };
 
 int main() {
 	SetConsoleOutputCP(1251);
 	SetConsoleCP(1251);
-
-	string str = "ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞß";
-	for (int i = 0; i < str.length(); i++) {
-		cout << int(str[i]) << " ";
-	}
-	cout << endl;
 
 	string file_directory = "C://Users//nikit//Desktop//FILE.txt";
 	string program_password = "1111";
@@ -69,6 +88,7 @@ int main() {
 			string file_text;
 			switch (action_selection) {
 			case ENTER_TEXT:
+				cout << "Input: ";
 				cin.clear();
 				getline(cin, file_text);
 				cout << endl;
@@ -80,54 +100,46 @@ int main() {
 					throw "ERROR: Incorrect password.";
 				}
 				else {
+					string input_text;
+
 					switch (CipherSelection()) {
 					case ATBASH:
-						cout << "Input text: ";
-						cin.clear();
-						getline(cin, file_text);
+						input_text = GetInputText(file_directory);
+
+						AtbashEnDecode(input_text, file_directory);
+						input_text = FileOutput(file_directory);
+						AtbashEnDecode(input_text, file_directory);
 						cout << endl;
-						FileInput(file_directory, file_text);
-
-						AtbashEnDecode(file_directory);
-
-						cout << "Encrypted text: " << FileOutput(file_directory) << "\n\n";
-
-						AtbashEnDecode(file_directory);
 						break;
 
 					case RSA:
-						cout << "Input text: ";
-						cin.clear();
-						getline(cin, file_text);
+						input_text = GetInputText(file_directory);
+
+						RSA_E_D(input_text, file_directory);
 						cout << endl;
-						FileInput(file_directory, file_text);
-
-						RSA_Encode(file_directory);
-
-						cout << "Encrypted text: " << FileOutput(file_directory) << "\n\n";
-
-						RSA_Decode(file_directory);
 						break;
 
 					case RAIL_FENCE:
-						cout << "Input text: ";
-						cin.clear();
-						getline(cin, file_text);
+						input_text = GetInputText(file_directory);
+
+						int key;
+						cout << "Enter the key (key >= 2): ";
+						key = ReadInt();
+						if (key < 2) throw "ERROR: Incorrect input. The number does not match the specified range.";
 						cout << endl;
-						FileInput(file_directory, file_text);
 
-						RailFenceEncode(file_directory);
+						cout << "Input: " << input_text << endl;
+						RailFenceEncode(input_text, file_directory, key);
 
-						cout << "Encrypted text: " << FileOutput(file_directory) << "\n\n";
+						input_text = FileOutput(file_directory);
 
-						RailFenceDecode(file_directory);
+						RailFenceDecode(input_text, file_directory, key);
+						cout << endl;
 						break;
 
 					case MAIN_EXIT:
 						break;
 					}
-
-					cout << "Decrypted text: " << FileOutput(file_directory) << "\n\n";
 				}
 				break;
 
@@ -136,17 +148,34 @@ int main() {
 					throw "ERROR: Incorrect password.";
 				}
 				else {
+					string input_text;
+
 					switch (CipherSelection()) {
 					case ATBASH:
-						AtbashEnDecode(file_directory);
+						input_text = GetInputText(file_directory);
+
+						AtbashEnDecode(input_text, file_directory);
+						cout << endl;
 						break;
 
 					case RSA:
-						RSA_Encode(file_directory);
+						input_text = GetInputText(file_directory);
+
+						RSA_Encode(input_text, file_directory);
 						break;
 
 					case RAIL_FENCE:
-						RailFenceEncode(file_directory);
+						input_text = GetInputText(file_directory);
+
+						int key;
+						cout << "Enter the key (key >= 2): ";
+						key = ReadInt();
+						if (key < 2) throw "ERROR: Incorrect input. The number does not match the specified range.";
+						cout << endl;
+
+						cout << "Input: " << input_text << endl;
+						RailFenceEncode(input_text, file_directory, key);
+						cout << endl;
 						break;
 
 					case MAIN_EXIT:
@@ -160,17 +189,36 @@ int main() {
 					throw "ERROR: Incorrect password.";
 				}
 				else {
+					int method_selection;
+					string input_text;
+
 					switch (CipherSelection()) {
 					case ATBASH:
-						AtbashEnDecode(file_directory);
+						input_text = GetInputText(file_directory);
+
+						AtbashEnDecode(input_text, file_directory);
+						cout << endl;
 						break;
 
 					case RSA:
-						RSA_Decode(file_directory);
+						input_text = GetInputText(file_directory);
+
+						RSA_Decode(input_text, file_directory);
+						cout << endl;
 						break;
 
 					case RAIL_FENCE:
-						RailFenceDecode(file_directory);
+						input_text = GetInputText(file_directory);
+
+						int key;
+						cout << "Enter the key (key >= 2): ";
+						key = ReadInt();
+						if (key < 2) throw "ERROR: Incorrect input. The number does not match the specified range.";
+						cout << endl;
+
+						cout << "Input: " << input_text << endl;
+						RailFenceDecode(input_text, file_directory, key);
+						cout << endl;
 						break;
 
 					case MAIN_EXIT:
@@ -181,7 +229,7 @@ int main() {
 
 			case OUTPUT_TEXT:
 				file_text = FileOutput(file_directory);
-				cout << file_text << "\n\n";
+				cout << "Output: " << file_text << "\n\n";
 				break;
 
 			case EXIT:

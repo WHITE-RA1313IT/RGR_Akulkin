@@ -47,11 +47,8 @@ string FileOutput(string const& file_directory) {
     return output_text;
 }
 
-void AtbashEnDecode(string const& file_directory) {
-    string input_text = FileOutput(file_directory);
-
-    map <char, char> alphabet = { {'A','Z'}, {'B','Y'}, {'C','X'}, {'D','W'}, {'E','V'}, {'F','U'}, {'G','T'}, {'H','S'}, {'I','R'}, {'J','Q'}, {'K','P'}, {'L','O'}, {'M','N'}, {'a','z'}, {'b','y'}, {'c','x'}, {'d','w'}, {'e','v'}, {'f','u'}, {'g','t'}, {'h','s'}, {'i','r'}, {'j','q'}, {'k','p'}, {'l','o'}, {'m','n'},
-                                  {'À','ß'}, {'Á','Þ'}, {'Â','Ý'}, {'Ã','Ü'}, {'Ä','Û'}, {'Å','Ú'}, {'¨','Ù'}, {'Æ','Ø'}, {'Ç','×'}, {'È','Ö'}, {'É','Õ'}, {'Ê','Ô'}, {'Ë','Ó'}, {'Ì','Ò'}, {'Í','Ñ'}, {'Î','Ð'}, {'à','ÿ'}, {'á','þ'}, {'â','ý'}, {'ã','ü'}, {'ä','û'}, {'å','ú'}, {'¸','ù'}, {'æ','ø'}, {'ç','÷'}, {'è','ö'}, {'é','õ'}, {'ê','ô'}, {'ë','ó'}, {'ì','ò'}, {'í','ñ'}, {'î','ð'} };
+void AtbashEnDecode(string const& input_text, string const& file_directory) {
+    map <char, char> alphabet = { {'A','Z'}, {'B','Y'}, {'C','X'}, {'D','W'}, {'E','V'}, {'F','U'}, {'G','T'}, {'H','S'}, {'I','R'}, {'J','Q'}, {'K','P'}, {'L','O'}, {'M','N'}, {'a','z'}, {'b','y'}, {'c','x'}, {'d','w'}, {'e','v'}, {'f','u'}, {'g','t'}, {'h','s'}, {'i','r'}, {'j','q'}, {'k','p'}, {'l','o'}, {'m','n'} };
     string output_text = "";
     for (int i = 0; i < input_text.length(); i++) {
         bool find_letter = false;
@@ -71,23 +68,8 @@ void AtbashEnDecode(string const& file_directory) {
     }
 
     FileInput(file_directory, output_text);
+    cout << "Output: " << output_text << endl;
 }
-
-//int Euler(int const& input) {
-//    int n = input, res = input;
-//    for (int d = 2; d * d <= n; d++) {
-//        if (n % d == 0) {
-//            while (n % d == 0) {
-//                n /= d;
-//            }
-//            res -= res / d;
-//        }
-//    }
-//    if (n > 1) {
-//        res -= res / n;
-//    }
-//    return res;
-//}
 
 bool checkPrime(int num) {
     for (int i = 2; i < num; i++) {
@@ -142,8 +124,8 @@ int mod(int a0, int x0, int p0) {
     return q;
 }
 
-void RSA_Encode(string const& file_directory) {
-    string input_text = FileOutput(file_directory), encrypted_text;
+void RSA_E_D(string const& input_text, string const& file_directory) {
+    string encrypted_text, decrypted_text;
 
     cout << "Enter the public key (e, n):\n";
 
@@ -192,10 +174,83 @@ void RSA_Encode(string const& file_directory) {
     }
 
     FileInput(file_directory, encrypted_text);
+
+    int value = 0;
+    bool negative = false;
+    for (int i = 0; i < encrypted_text.length(); i++) {
+        if (encrypted_text[i] >= '0' && encrypted_text[i] <= '9') {
+            value *= 10;
+            value += encrypted_text[i] - '0';
+            if (i != 0) {
+                if (encrypted_text[i - 1] == '-') negative = true;
+            }
+        }
+        else if (encrypted_text[i] == ' ') {
+            if (negative) value *= -1;
+            negative = false;
+            value = mod(value, d, n);
+            decrypted_text += char(value);
+            value = 0;
+        }
+    }
+
+    FileInput(file_directory, decrypted_text);
+
+    cout << "Input text: " << input_text << endl;
+    cout << "Encrypted text: " << encrypted_text << endl;
+    cout << "Decrypted text: " << decrypted_text << endl;
 }
 
-void RSA_Decode(string const& file_directory) {
-    string encrypted_text = FileOutput(file_directory), decrypted_text;
+void RSA_Encode(string const& input_text, string const& file_directory) {
+    string encrypted_text;
+
+    cout << "Enter the public key (e, n):\n";
+
+    cout << "Enter two prime numbers p and q (n = p * q):\n";
+
+    cout << "p (p >= 128 & p <= 10000) << ";
+    int p = ReadInt();
+    if (p < 128 || p > 10000 || !checkPrime(p)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
+
+    cout << "q (q >= 128 & q <= 10000) << ";
+    int q = ReadInt();
+    if (q < 128 || q > 10000 || !checkPrime(q)) throw "\nERROR: Incorrect input. The number does not match the specified range or is not prime.";
+
+    int n = p * q;
+    int f = (p - 1) * (q - 1);
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<mt19937::result_type> dist(f / 2, f - 1);
+
+    cout << "Possible values of e: ";
+
+    int k = 0;
+    while (k <= 10) {
+        int temp = dist(gen);
+        if (mutuallyPrime(temp, f)) {
+            if (k != 10) cout << temp << " , ";
+            else cout << temp << endl;
+            k++;
+        }
+    }
+
+    cout << "e (e < " << f << ") << ";
+    int e = ReadInt();
+    if (e < 0 || e >= f || !mutuallyPrime(e, f)) throw "ERROR: Incorrect input. The number does not match the specified range.";
+
+    for (auto x : input_text) {
+        encrypted_text += to_string(mod(x, e, n)) + ' ';
+    }
+
+    FileInput(file_directory, encrypted_text);
+
+    cout << "Input text: " << input_text << endl;
+    cout << "Encrypted text: " << encrypted_text << endl;
+}
+
+void RSA_Decode(string const& input_text, string const& file_directory) {
+    string decrypted_text, encrypted_text = input_text;
 
     cout << "Enter the private key (d, n):\n";
     cout << "d << ";
@@ -227,18 +282,15 @@ void RSA_Decode(string const& file_directory) {
     }
 
     FileInput(file_directory, decrypted_text);
+
+    cout << "Input text: " << encrypted_text << endl;
+    cout << "Decrypted text: " << decrypted_text << endl;
 }
 
-void RailFenceEncode(string const& file_directory) {
+void RailFenceEncode(string const& input_text, string const& file_directory, int const& key) {
     vector <vector <char>> fence;
-    string input_text = FileOutput(file_directory), enc_text;
+    string enc_text;
     bool direction = false;
-
-    int key;
-    cout << "Enter the key (key >= 2): ";
-    key = ReadInt();
-    if (key < 2) throw "ERROR: Incorrect input. The number does not match the specified range.";
-    cout << endl;
 
     fence.resize(key);
 
@@ -265,19 +317,17 @@ void RailFenceEncode(string const& file_directory) {
             if (y) enc_text += y;
         }
     }
+
     FileInput(file_directory, enc_text);
+
+    cout << "Encrypted text: " << enc_text << endl;
 }
 
-void RailFenceDecode(string const& file_directory) {
-    string encrypted_text = FileOutput(file_directory), dec_text;
+void RailFenceDecode(string const& input_text, string const& file_directory, int const& key) {
+    string encrypted_text = input_text, dec_text;
 
     vector <vector <char>> fence;
     bool direction = false;
-    
-    int key;
-    cout << "Enter the key: ";
-    key = ReadInt();
-    cout << endl;
 
     fence.resize(key);
 
@@ -326,4 +376,6 @@ void RailFenceDecode(string const& file_directory) {
     }
 
     FileInput(file_directory, dec_text);
+
+    cout << "Decrypted text: " << dec_text << endl;
 }
